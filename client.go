@@ -28,19 +28,27 @@ import (
 // * prefix is inserted before the standard request path - if your server serves on different path.
 // * caFile is the PEM file with the server's CA.
 // * serverHostOverride is to override the CA's host.
-func DialOpts(prefix, caFile, serverHostOverride string) ([]grpc.DialOption, error) {
+func DialOpts(
+	prefix, caFile, serverHostOverride string,
+	Log func(keyvals ...interface{}) error,
+) ([]grpc.DialOption, error) {
 	dialOpts := make([]grpc.DialOption, 2, 5)
 	dialOpts[0] = grpc.WithCompressor(grpc.NewGZIPCompressor())
 	dialOpts[1] = grpc.WithDecompressor(grpc.NewGZIPDecompressor())
 
-	if prefix != "" {
+	if prefix != "" || Log != nil {
+		if Log == nil {
+			Log = func(keyvals ...interface{}) error { return nil }
+		}
 		dialOpts = append(dialOpts,
 			grpc.WithStreamInterceptor(
 				func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+					Log("method", method)
 					return streamer(ctx, desc, cc, prefix+method, opts...)
 				}),
 			grpc.WithUnaryInterceptor(
 				func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+					Log("method", method)
 					return invoker(ctx, prefix+method, req, reply, cc, opts...)
 				}),
 		)
