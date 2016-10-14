@@ -23,20 +23,25 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+type DialConfig struct {
+	PathPrefix         string
+	CAFile             string
+	ServerHostOverride string
+	Username, Password string
+	Log                func(keyvals ...interface{}) error
+}
+
 // DialOpts renders the dial options for calling a gRPC server.
 //
 // * prefix is inserted before the standard request path - if your server serves on different path.
 // * caFile is the PEM file with the server's CA.
 // * serverHostOverride is to override the CA's host.
-func DialOpts(
-	prefix, caFile, serverHostOverride string,
-	Log func(keyvals ...interface{}) error,
-) ([]grpc.DialOption, error) {
-	dialOpts := make([]grpc.DialOption, 2, 5)
+func DialOpts(conf DialConfig) ([]grpc.DialOption, error) {
+	dialOpts := make([]grpc.DialOption, 2, 6)
 	dialOpts[0] = grpc.WithCompressor(grpc.NewGZIPCompressor())
 	dialOpts[1] = grpc.WithDecompressor(grpc.NewGZIPDecompressor())
 
-	if prefix != "" || Log != nil {
+	if prefix, Log := conf.PathPrefix, conf.Log; prefix != "" || Log != nil {
 		if Log == nil {
 			Log = func(keyvals ...interface{}) error { return nil }
 		}
@@ -53,15 +58,17 @@ func DialOpts(
 				}),
 		)
 	}
-	if caFile == "" {
-		dialOpts = append(dialOpts, grpc.WithInsecure())
-	} else {
-		creds, err := credentials.NewClientTLSFromFile(caFile, serverHostOverride)
-		if err != nil {
-			return dialOpts, errors.Wrapf(err, "%q,%q", caFile, serverHostOverride)
-		}
-		dialOpts = append(dialOpts, grpc.WithTransportCredentials(creds))
+	if conf.Username != "" {
+		dialOpts = append(dialOpts, grpc.WithPerRPCCredentials(NewBasicAuth(conf.Username, conf.Password)))
 	}
+	if conf.CAFile == "" {
+		return append(dialOpts, grpc.WithInsecure()), nil
+	}
+	creds, err := credentials.NewClientTLSFromFile(conf.CAFile, conf.ServerHostOverride)
+	if err != nil {
+		return dialOpts, errors.Wrapf(err, "%q,%q", conf.CAFile, conf.ServerHostOverride)
+	}
+	dialOpts = append(dialOpts, grpc.WithTransportCredentials(creds))
 
 	return dialOpts, nil
 }
