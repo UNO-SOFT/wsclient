@@ -20,18 +20,26 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+const BasicAuthKey = "authorization-basic"
+
+func WithBasicAuth(ctx context.Context, username, password string) context.Context {
+	return context.WithValue(ctx, BasicAuthKey, username+":"+password)
+}
+
 var _ = credentials.PerRPCCredentials(basicAuthCreds{})
 
 type basicAuthCreds struct {
-	username, password string
+	up string
 }
 
 func NewBasicAuth(username, password string) basicAuthCreds {
-	return basicAuthCreds{username: username, password: password}
+	return basicAuthCreds{up: username + ":" + password}
 }
 func (ba basicAuthCreds) RequireTransportSecurity() bool { return true }
 func (ba basicAuthCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"authorization": ba.username + ":" + ba.password,
-	}, nil
+	up := ctx.Value(BasicAuthKey).(string)
+	if up == "" {
+		up = ba.up
+	}
+	return map[string]string{"authorization": up}, nil
 }
