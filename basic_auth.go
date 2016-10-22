@@ -37,9 +37,9 @@ func NewBasicAuth(username, password string) basicAuthCreds {
 }
 func (ba basicAuthCreds) RequireTransportSecurity() bool { return true }
 func (ba basicAuthCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	var upS string
-	if up := ctx.Value(BasicAuthKey); up != nil {
-		upS = up.(string)
+	var up string
+	if upI := ctx.Value(BasicAuthKey); upI != nil {
+		up = upI.(string)
 	}
 	if up == "" {
 		up = ba.up
