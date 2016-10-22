@@ -1,4 +1,4 @@
-// Copyright 2016 Tam√°s Gul√°csi
+// Copyright 2016 Tam·s Gul·csi
 //
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,10 @@ func NewBasicAuth(username, password string) basicAuthCreds {
 }
 func (ba basicAuthCreds) RequireTransportSecurity() bool { return true }
 func (ba basicAuthCreds) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	up := ctx.Value(BasicAuthKey).(string)
+	var upS string
+	if up := ctx.Value(BasicAuthKey); up != nil {
+		upS = up.(string)
+	}
 	if up == "" {
 		up = ba.up
 	}
