@@ -71,3 +71,5 @@ func DialOpts(conf DialConfig) ([]grpc.DialOption, error) {
 
 	return dialOpts, nil
 }
+
+// vim: se noet fileencoding=utf-8:

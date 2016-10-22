@@ -1,4 +1,4 @@
-// Copyright 2016 Tam·s Gul·csi
+// Copyright 2016 Tam√°s Gul√°csi
 //
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,3 +46,5 @@ func (ba basicAuthCreds) GetRequestMetadata(ctx context.Context, uri ...string) 
 	}
 	return map[string]string{"authorization": up}, nil
 }
+
+// vim: se noet fileencoding=utf-8:
