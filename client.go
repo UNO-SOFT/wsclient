@@ -23,15 +23,20 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// Receiver is an interface for Recv()-ing streamed responses from the server.
 type Receiver interface {
 	Recv() (interface{}, error)
 }
 
+// Client is the client interface for calling a gRPC server.
 type Client interface {
+	// Input returns the input struct for the name.
 	Input(name string) interface{}
+	// Call the named function.
 	Call(name string, ctx context.Context, input interface{}, opts ...grpc.CallOption) (Receiver, error)
 }
 
+// DialConfig contains the configuration variables.
 type DialConfig struct {
 	PathPrefix         string
 	CAFile             string
