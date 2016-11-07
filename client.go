@@ -23,6 +23,15 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+type Receiver interface {
+	Recv() (interface{}, error)
+}
+
+type Client interface {
+	Input(name string) interface{}
+	Call(name string, ctx context.Context, input interface{}, opts ...grpc.CallOption) (Receiver, error)
+}
+
 type DialConfig struct {
 	PathPrefix         string
 	CAFile             string
